@@ -8,6 +8,7 @@ package com.cloudera.datascience.geotime
 
 
 import java.text.SimpleDateFormat
+import java.util.Locale
 
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.ClassTag
@@ -31,7 +32,7 @@ case class Trip(
 
 object RunGeoTime extends Serializable {
 
-  val formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+  val formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH)
 
   def main(args: Array[String]): Unit = {
     val sc = new SparkContext(new SparkConf().setAppName("GeoTime"))
@@ -160,7 +161,7 @@ object RunGeoTime extends Serializable {
     d.getStandardHours >= 4
   }
 
-  def groupByKeyAndSortValues[K : Ordering : ClassTag, V : ClassTag, S](
+  def groupByKeyAndSortValues[K : Ordering : ClassTag, V : ClassTag, S : Ordering](
       rdd: RDD[(K, V)],
       secondaryKeyFunc: (V) => S,
       splitFunc: (V, V) => Boolean,
@@ -171,7 +172,6 @@ object RunGeoTime extends Serializable {
       }
     }
     val partitioner = new FirstKeyPartitioner[K, S](numPartitions)
-    implicit val ordering: Ordering[(K,S)] = Ordering.by(_._1)
     presess.repartitionAndSortWithinPartitions(partitioner).mapPartitions(groupSorted(_, splitFunc))
   }
 

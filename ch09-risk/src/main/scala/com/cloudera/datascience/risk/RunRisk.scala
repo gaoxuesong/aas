@@ -8,6 +8,7 @@ package com.cloudera.datascience.risk
 
 import java.io.File
 import java.text.SimpleDateFormat
+import java.util.Locale
 
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
@@ -79,12 +80,7 @@ object RunRisk {
   def computeFactorWeights(
       stocksReturns: Seq[Array[Double]],
       factorFeatures: Array[Array[Double]]): Array[Array[Double]] = {
-    val models = stocksReturns.map(linearModel(_, factorFeatures))
-    val factorWeights = Array.ofDim[Double](stocksReturns.length, factorFeatures.head.length+1)
-    for (s <- 0 until stocksReturns.length) {
-      factorWeights(s) = models(s).estimateRegressionParameters()
-    }
-    factorWeights
+    stocksReturns.map(linearModel(_, factorFeatures)).map(_.estimateRegressionParameters()).toArray
   }
 
   def featurize(factorReturns: Array[Double]): Array[Double] = {
@@ -231,7 +227,7 @@ object RunRisk {
   }
 
   def readInvestingDotComHistory(file: File): Array[(DateTime, Double)] = {
-    val format = new SimpleDateFormat("MMM d, yyyy")
+    val format = new SimpleDateFormat("MMM d, yyyy", Locale.ENGLISH)
     val lines = Source.fromFile(file).getLines().toSeq
     lines.map(line => {
       val cols = line.split('\t')
@@ -245,7 +241,7 @@ object RunRisk {
    * Reads a history in the Yahoo format
    */
   def readYahooHistory(file: File): Array[(DateTime, Double)] = {
-    val format = new SimpleDateFormat("yyyy-MM-dd")
+    val format = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH)
     val lines = Source.fromFile(file).getLines().toSeq
     lines.tail.map(line => {
       val cols = line.split(',')
